@@ -1,9 +1,11 @@
 plugins {
     id("java")
+    id("com.diffplug.spotless") version "5.15.1"
 }
 
+// TODO replace with etsablished group id
 group = "momento.lettuce"
-version = "1.0-SNAPSHOT"
+version = "0.1.0"
 
 repositories {
     mavenCentral()
@@ -16,4 +18,11 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+spotless {
+    java {
+        removeUnusedImports()
+        googleJavaFormat("1.11.0")
+    }
 }
