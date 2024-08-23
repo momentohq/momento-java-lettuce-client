@@ -21,4 +21,28 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
-replay_pid*
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+
+*.iml
+.idea
+
+# Ignore Gradle project-specific cache directory
+examples/.gradle
+
+# Ignore Gradle build output directory
+examples/build
+
+# Ignore IDE
+examples/.idea
+examples/.project
+examples/.settings
+examples/lib/.settings
+examples/lib/.classpath
+examples/lib/.project
+examples/lib/bin
+.vscode/
