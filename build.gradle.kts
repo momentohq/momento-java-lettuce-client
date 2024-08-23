@@ -17,6 +17,8 @@ dependencies {
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.slf4j:slf4j-api:2.1.0-alpha1")
+    testImplementation("ch.qos.logback:logback:0.5")
 }
 
 tasks.test {
