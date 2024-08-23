@@ -61,9 +61,7 @@ jobs:
         distribution: 'corretto'
 
     - name: Build project
-      uses: gradle/gradle-build-action@v2
-      with:
-        arguments: clean build
+      run: make build
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
