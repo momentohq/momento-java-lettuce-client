@@ -37,16 +37,11 @@ jobs:
         java-version: 17
         distribution: 'corretto'
 
-    - name: Commitlint and Other Shared Build Steps
-      uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Build project
       run: make build
 
     - name: Run tests
-      run: make test
+      run: make test-momento
 
   test-redis:
     runs-on: ubuntu-latest
@@ -68,13 +63,8 @@ jobs:
         java-version: 17
         distribution: 'corretto'
 
-    - name: Commitlint and Other Shared Build Steps
-      uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Build project
       run: make build
 
     - name: Run tests
-      run: REDIS=1 make test
+      run: make test-redis
