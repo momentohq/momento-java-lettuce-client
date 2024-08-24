@@ -77,4 +77,4 @@ jobs:
       run: make build
 
     - name: Run tests
-      run: make test
+      run: REDIS=1 make test
