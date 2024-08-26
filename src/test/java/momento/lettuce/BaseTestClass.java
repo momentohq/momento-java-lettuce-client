@@ -19,7 +19,7 @@ public class BaseTestClass {
   private static CacheClient momentoCacheClient = null;
   private static final String cacheName = "java-lettuce-integration-test-default-" + randomString();
 
-  private static boolean isRedisTest() {
+  protected static boolean isRedisTest() {
     var redis = System.getenv("REDIS");
     return redis != null && (redis.equals("1") || redis.toLowerCase().equals("true"));
   }
@@ -29,14 +29,19 @@ public class BaseTestClass {
     return redisClient.connect().reactive();
   }
 
-  private static RedisReactiveCommands<String, String> buildMomentoClient() {
+  protected static RedisReactiveCommands<String, String> buildMomentoClient(
+      Duration clientTimeout) {
     momentoCacheClient =
         new CacheClient(
             CredentialProvider.fromEnvVar("MOMENTO_API_KEY"),
-            Configurations.Laptop.latest(),
+            Configurations.Laptop.latest().withTimeout(clientTimeout),
             Duration.ofMinutes(1));
     ensureCacheExists(momentoCacheClient, cacheName);
     return MomentoRedisReactiveClient.create(momentoCacheClient, cacheName);
+  }
+
+  protected static RedisReactiveCommands<String, String> buildMomentoClient() {
+    return buildMomentoClient(Duration.ofSeconds(5));
   }
 
   private static void ensureCacheExists(CacheClient client, String cacheName) {

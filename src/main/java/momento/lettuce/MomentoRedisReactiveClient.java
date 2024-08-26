@@ -81,6 +81,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import momento.lettuce.utils.MomentoLettuceExceptionMapper;
 import momento.lettuce.utils.RedisCodecByteArrayConverter;
 import momento.lettuce.utils.RedisResponse;
 import momento.sdk.CacheClient;
@@ -3055,11 +3056,11 @@ public class MomentoRedisReactiveClient<K, V>
               } else if (getResponse instanceof GetResponse.Miss) {
                 return Mono.empty();
               } else if (getResponse instanceof GetResponse.Error error) {
-                // TODO map the exception type
-                return Mono.error(error);
+                return Mono.error(MomentoLettuceExceptionMapper.mapException(error));
               } else {
-                // TODO map the exception type to a more specific one for an unexpected response
-                return Mono.error(new RuntimeException("Unexpected response"));
+                return Mono.error(
+                    MomentoLettuceExceptionMapper.unexpectedResponseException(
+                        getResponse.toString()));
               }
             });
   }
@@ -3134,11 +3135,11 @@ public class MomentoRedisReactiveClient<K, V>
               if (setResponse instanceof SetResponse.Success) {
                 return Mono.just(RedisResponse.OK);
               } else if (setResponse instanceof SetResponse.Error error) {
-                // TODO map the exception type
-                return Mono.error(error);
+                return Mono.error(MomentoLettuceExceptionMapper.mapException(error));
               } else {
-                // TODO map the exception type to a more specific one for an unexpected response
-                return Mono.error(new RuntimeException("Unexpected response"));
+                return Mono.error(
+                    MomentoLettuceExceptionMapper.unexpectedResponseException(
+                        setResponse.toString()));
               }
             });
   }
