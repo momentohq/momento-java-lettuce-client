@@ -22,28 +22,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  test-momento:
-    runs-on: ubuntu-latest
-    env:
-      MOMENTO_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
-
-    steps:
-    - name: Checkout project
-      uses: actions/checkout@v3
-
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: 17
-        distribution: 'corretto'
-
-    - name: Build project
-      run: make build
-
-    - name: Run tests
-      run: make test-momento
-
-  test-redis:
+  test:
     runs-on: ubuntu-latest
     services:
       redis:
@@ -66,5 +45,8 @@ jobs:
     - name: Build project
       run: make build
 
-    - name: Run tests
+    - name: Run tests vs momento
+      run: make test-momento
+
+    - name: Run tests vs redis
       run: make test-redis
