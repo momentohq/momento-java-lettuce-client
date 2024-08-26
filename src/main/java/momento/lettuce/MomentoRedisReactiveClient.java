@@ -76,15 +76,18 @@ import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.ImmediateEventExecutor;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import momento.lettuce.utils.MomentoLettuceExceptionMapper;
 import momento.lettuce.utils.RedisCodecByteArrayConverter;
 import momento.lettuce.utils.RedisResponse;
 import momento.sdk.CacheClient;
+import momento.sdk.responses.cache.DeleteResponse;
 import momento.sdk.responses.cache.GetResponse;
 import momento.sdk.responses.cache.SetResponse;
 import reactor.core.publisher.Flux;
@@ -1018,7 +1021,31 @@ public class MomentoRedisReactiveClient<K, V>
 
   @Override
   public Mono<Long> unlink(K... ks) {
-    return null;
+    // Delete the keys from Momento
+    var deleteFutures =
+        Arrays.stream(ks)
+            .map(k -> client.delete(cacheName, codec.encodeKeyToBytes(k)))
+            .collect(Collectors.toList());
+
+    // Wait for all the delete commands to complete
+    var compositeFuture = CompletableFuture.allOf(deleteFutures.toArray(new CompletableFuture[0]));
+    return Mono.fromFuture(compositeFuture)
+        .then(
+            Mono.defer(
+                () -> {
+                  var deletedKeys =
+                      deleteFutures.stream()
+                          .map(CompletableFuture::join)
+                          .collect(Collectors.toList());
+
+                  // If any of the delete commands was an error, then return an error.
+                  for (var deleteResponse : deletedKeys) {
+                    if (deleteResponse instanceof DeleteResponse.Error error) {
+                      return Mono.error(MomentoLettuceExceptionMapper.mapException(error));
+                    }
+                  }
+                  return Mono.just((long) ks.length);
+                }));
   }
 
   @Override

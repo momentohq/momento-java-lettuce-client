@@ -14,4 +14,6 @@ public interface MomentoRedisReactiveCommands<K, V> {
   Mono<V> get(K k);
 
   Mono<String> set(K k, V v);
+
+  Mono<Long> unlink(K... ks);
 }
