@@ -24,8 +24,20 @@ public class BaseTestClass {
     return redis != null && (redis.equals("1") || redis.toLowerCase().equals("true"));
   }
 
+  private static String getRedisHost() {
+    return System.getenv("REDIS_HOST") != null ? System.getenv("REDIS_HOST") : "localhost";
+  }
+
+  private static String getRedisPort() {
+    return System.getenv("REDIS_PORT") != null ? System.getenv("REDIS_PORT") : "6379";
+  }
+
+  private static String getRedisUri() {
+    return String.format("redis://%s:%s/0", getRedisHost(), getRedisPort());
+  }
+
   private static RedisReactiveCommands<String, String> buildRedisClient() {
-    RedisClient redisClient = RedisClient.create("redis://localhost:6379/0");
+    RedisClient redisClient = RedisClient.create(getRedisUri());
     return redisClient.connect().reactive();
   }
 
