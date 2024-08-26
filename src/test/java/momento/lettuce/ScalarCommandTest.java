@@ -36,6 +36,6 @@ final class ScalarCommandTest extends BaseTestClass {
     assertEquals("OK", setResponse);
 
     var storedValue = client.get(key).block();
-    assertEquals(storedValue, value);
+    assertEquals(value, storedValue);
   }
 }
