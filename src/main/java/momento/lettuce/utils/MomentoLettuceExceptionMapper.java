@@ -3,6 +3,7 @@ package momento.lettuce.utils;
 import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.RedisCommandTimeoutException;
 import io.lettuce.core.RedisException;
+import jdk.jshell.spi.ExecutionControl;
 import momento.sdk.exceptions.SdkException;
 
 /** Maps Momento SDK exceptions to Lettuce exceptions. */
@@ -35,5 +36,13 @@ public class MomentoLettuceExceptionMapper {
    */
   public static RedisException unexpectedResponseException(String response) {
     return new RedisCommandExecutionException("Unexpected response from Momento: " + response);
+  }
+
+  public static UnsupportedOperationException commandNotImplementedException(String commandName) {
+    return new UnsupportedOperationException("Command not implemented: " + commandName);
+  }
+
+  public static UnsupportedOperationException argumentNotSupportedException(String commandName, String argumentName) {
+    return new UnsupportedOperationException("Argument not supported for command " + commandName + ": " + argumentName);
   }
 }

@@ -1,7 +1,10 @@
 package momento.lettuce;
 
+import io.lettuce.core.ExpireArgs;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import reactor.core.publisher.Mono;
+
+import java.time.Duration;
 
 /**
  * The subset of {@link RedisReactiveCommands} that are also implemented by {@link
@@ -14,6 +17,14 @@ public interface MomentoRedisReactiveCommands<K, V> {
   Mono<V> get(K k);
 
   Mono<String> set(K k, V v);
+
+  Mono<Boolean> pexpire(K k, long l);
+
+  Mono<Boolean> pexpire(K k, long l, ExpireArgs expireArgs);
+
+  Mono<Boolean> pexpire(K k, Duration duration);
+
+  Mono<Boolean> pexpire(K k, Duration duration, ExpireArgs expireArgs);
 
   Mono<Long> unlink(K... ks);
 }

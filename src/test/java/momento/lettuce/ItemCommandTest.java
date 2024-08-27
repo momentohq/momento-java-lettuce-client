@@ -2,8 +2,15 @@ package momento.lettuce;
 
 import static momento.lettuce.TestUtils.randomString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.lettuce.core.ExpireArgs;
+import momento.lettuce.utils.RedisResponse;
 import org.junit.jupiter.api.Test;
+
+import java.time.Duration;
 
 final class ItemCommandTest extends BaseTestClass {
   @Test
@@ -46,5 +53,35 @@ final class ItemCommandTest extends BaseTestClass {
 
     var storedValue3 = client.get(key3).block();
     assertEquals(value3, storedValue3);
+  }
+
+  @Test
+  public void testPExpireUnsupported() {
+    if (isRedisTest()) {
+      return;
+    }
+
+    var key = "key";
+    var expiry = Duration.ofMillis(5000);
+
+    assertThrows(UnsupportedOperationException.class, () -> client.pexpire(key, expiry, ExpireArgs.Builder.nx()).block());
+    assertThrows(UnsupportedOperationException.class, () -> client.pexpire(key, expiry, ExpireArgs.Builder.gt()).block());
+    assertThrows(UnsupportedOperationException.class, () -> client.pexpire(key, expiry, ExpireArgs.Builder.lt()).block());
+  }
+
+  @Test
+  public void testPExpireUnconditionally() {
+    var key = randomString();
+    var expiry = Duration.ofMillis(5000);
+
+    // A miss is false
+    var updateResponse = client.pexpire(key, expiry).block();
+    assertFalse(updateResponse);
+
+    var storedResponse = client.set(key, randomString()).block();
+    assertEquals(RedisResponse.OK, storedResponse);
+
+    updateResponse = client.pexpire(key, expiry).block();
+    assertTrue(updateResponse);
   }
 }

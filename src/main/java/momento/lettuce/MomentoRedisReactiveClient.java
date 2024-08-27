@@ -83,6 +83,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
+import momento.lettuce.utils.ExpireCondition;
 import momento.lettuce.utils.MomentoLettuceExceptionMapper;
 import momento.lettuce.utils.RedisCodecByteArrayConverter;
 import momento.lettuce.utils.RedisResponse;
@@ -90,6 +92,7 @@ import momento.sdk.CacheClient;
 import momento.sdk.responses.cache.DeleteResponse;
 import momento.sdk.responses.cache.GetResponse;
 import momento.sdk.responses.cache.SetResponse;
+import momento.sdk.responses.cache.ttl.UpdateTtlResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -1165,22 +1168,47 @@ public class MomentoRedisReactiveClient<K, V>
 
   @Override
   public Mono<Boolean> pexpire(K k, long l) {
-    return null;
+    return pexpire(k, Duration.ofMillis(l), new ExpireArgs());
   }
 
   @Override
   public Mono<Boolean> pexpire(K k, long l, ExpireArgs expireArgs) {
-    return null;
+    return pexpire(k, Duration.ofMillis(l), expireArgs);
   }
 
   @Override
   public Mono<Boolean> pexpire(K k, Duration duration) {
-    return null;
+    return pexpire(k, duration, new ExpireArgs());
   }
 
   @Override
   public Mono<Boolean> pexpire(K k, Duration duration, ExpireArgs expireArgs) {
-    return null;
+    var expireCondition = ExpireCondition.fromExpireArgs(expireArgs);
+    if (expireCondition.requiresNoExpiry()) {
+      throw MomentoLettuceExceptionMapper.argumentNotSupportedException("pexpire", "ExpireArgs NX");
+    }
+    if (expireCondition.requiresGreaterThan()) {
+        throw MomentoLettuceExceptionMapper.argumentNotSupportedException("pexpire", "ExpireArgs GT");
+    } else if (expireCondition.requiresLessThan()) {
+        throw MomentoLettuceExceptionMapper.argumentNotSupportedException("pexpire", "ExpireArgs LT");
+    }
+
+    var encodedKey = codec.encodeKeyToBytes(k);
+
+    var updateTtlResponseFuture = client.updateTtl(cacheName, encodedKey, duration);
+    return Mono.fromFuture(updateTtlResponseFuture)
+          .flatMap(
+              response -> {
+                  if (response instanceof UpdateTtlResponse.Set) {
+                    return Mono.just(true);
+                  } else if (response instanceof UpdateTtlResponse.Miss) {
+                    return Mono.just(false);
+                  } else if (response instanceof UpdateTtlResponse.Error error) {
+                    return Mono.error(MomentoLettuceExceptionMapper.mapException(error));
+                  } else {
+                      return Mono.error(MomentoLettuceExceptionMapper.unexpectedResponseException(response.toString()));
+                  }
+              });
   }
 
   @Override
