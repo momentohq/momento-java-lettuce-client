@@ -1,4 +1,4 @@
-.PHONY: all clean build test format lint precommit help
+.PHONY: all clean build test test-momento test-redis format lint precommit help
 
 
 all: precommit
@@ -12,8 +12,15 @@ build:
 	./gradlew build
 
 ## Run all the tests
-test:
+test: test-momento test-redis
+
+## Run the tests vs Momento
+test-momento:
 	./gradlew test
+
+## Run the tests vs Redis
+test-redis:
+	REDIS=1 ./gradlew test
 
 ## Format the code
 format:

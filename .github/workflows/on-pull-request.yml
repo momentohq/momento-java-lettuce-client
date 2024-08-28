@@ -5,8 +5,30 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
+    steps:
+    - name: Checkout project
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: 17
+        distribution: 'corretto'
+
+    - name: Commitlint and Other Shared Build Steps
+      uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
     env:
       MOMENTO_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
 
@@ -20,40 +42,11 @@ jobs:
         java-version: 17
         distribution: 'corretto'
 
-#    - name: Verify README generation
-#      uses: momentohq/standards-and-practices/github-actions/oss-readme-template@gh-actions-v2
-#      with:
-#        project_status: official
-#        project_stability: stable
-#        project_type: sdk
-#        sdk_language: Java
-#        dev_docs_slug: java
-#
-#    - name: Verify examples README generation
-#      uses: momentohq/standards-and-practices/github-actions/oss-readme-template@gh-actions-v2
-#      with:
-#        project_status: official
-#        project_stability: beta
-#        project_type: other
-#        template_file: ./examples/README.template.md
-#        output_file: ./examples/README.md
-#
-#    - name: Verify Storage examples README generation
-#      uses: momentohq/standards-and-practices/github-actions/oss-readme-template@gh-actions-v2
-#      with:
-#        project_status: official
-#        project_stability: beta
-#        project_type: other
-#        template_file: ./examples/storage/README.template.md
-#        output_file: ./examples/storage/README.md
-
-    - name: Commitlint and Other Shared Build Steps
-      uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Build project
       run: make build
 
-    - name: Run tests
-      run: make test
+    - name: Run tests vs momento
+      run: make test-momento
+
+    - name: Run tests vs redis
+      run: make test-redis
