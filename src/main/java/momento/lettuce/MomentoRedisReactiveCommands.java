@@ -2,9 +2,8 @@ package momento.lettuce;
 
 import io.lettuce.core.ExpireArgs;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
-import reactor.core.publisher.Mono;
-
 import java.time.Duration;
+import reactor.core.publisher.Mono;
 
 /**
  * The subset of {@link RedisReactiveCommands} that are also implemented by {@link

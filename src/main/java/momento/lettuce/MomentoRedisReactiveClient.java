@@ -83,7 +83,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-
 import momento.lettuce.utils.ExpireCondition;
 import momento.lettuce.utils.MomentoLettuceExceptionMapper;
 import momento.lettuce.utils.RedisCodecByteArrayConverter;
@@ -1188,27 +1187,28 @@ public class MomentoRedisReactiveClient<K, V>
       throw MomentoLettuceExceptionMapper.argumentNotSupportedException("pexpire", "ExpireArgs NX");
     }
     if (expireCondition.requiresGreaterThan()) {
-        throw MomentoLettuceExceptionMapper.argumentNotSupportedException("pexpire", "ExpireArgs GT");
+      throw MomentoLettuceExceptionMapper.argumentNotSupportedException("pexpire", "ExpireArgs GT");
     } else if (expireCondition.requiresLessThan()) {
-        throw MomentoLettuceExceptionMapper.argumentNotSupportedException("pexpire", "ExpireArgs LT");
+      throw MomentoLettuceExceptionMapper.argumentNotSupportedException("pexpire", "ExpireArgs LT");
     }
 
     var encodedKey = codec.encodeKeyToBytes(k);
 
     var updateTtlResponseFuture = client.updateTtl(cacheName, encodedKey, duration);
     return Mono.fromFuture(updateTtlResponseFuture)
-          .flatMap(
-              response -> {
-                  if (response instanceof UpdateTtlResponse.Set) {
-                    return Mono.just(true);
-                  } else if (response instanceof UpdateTtlResponse.Miss) {
-                    return Mono.just(false);
-                  } else if (response instanceof UpdateTtlResponse.Error error) {
-                    return Mono.error(MomentoLettuceExceptionMapper.mapException(error));
-                  } else {
-                      return Mono.error(MomentoLettuceExceptionMapper.unexpectedResponseException(response.toString()));
-                  }
-              });
+        .flatMap(
+            response -> {
+              if (response instanceof UpdateTtlResponse.Set) {
+                return Mono.just(true);
+              } else if (response instanceof UpdateTtlResponse.Miss) {
+                return Mono.just(false);
+              } else if (response instanceof UpdateTtlResponse.Error error) {
+                return Mono.error(MomentoLettuceExceptionMapper.mapException(error));
+              } else {
+                return Mono.error(
+                    MomentoLettuceExceptionMapper.unexpectedResponseException(response.toString()));
+              }
+            });
   }
 
   @Override

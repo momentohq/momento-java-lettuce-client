@@ -7,10 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.lettuce.core.ExpireArgs;
+import java.time.Duration;
 import momento.lettuce.utils.RedisResponse;
 import org.junit.jupiter.api.Test;
-
-import java.time.Duration;
 
 final class ItemCommandTest extends BaseTestClass {
   @Test
@@ -64,9 +63,15 @@ final class ItemCommandTest extends BaseTestClass {
     var key = "key";
     var expiry = Duration.ofMillis(5000);
 
-    assertThrows(UnsupportedOperationException.class, () -> client.pexpire(key, expiry, ExpireArgs.Builder.nx()).block());
-    assertThrows(UnsupportedOperationException.class, () -> client.pexpire(key, expiry, ExpireArgs.Builder.gt()).block());
-    assertThrows(UnsupportedOperationException.class, () -> client.pexpire(key, expiry, ExpireArgs.Builder.lt()).block());
+    assertThrows(
+        UnsupportedOperationException.class,
+        () -> client.pexpire(key, expiry, ExpireArgs.Builder.nx()).block());
+    assertThrows(
+        UnsupportedOperationException.class,
+        () -> client.pexpire(key, expiry, ExpireArgs.Builder.gt()).block());
+    assertThrows(
+        UnsupportedOperationException.class,
+        () -> client.pexpire(key, expiry, ExpireArgs.Builder.lt()).block());
   }
 
   @Test

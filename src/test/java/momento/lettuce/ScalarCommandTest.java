@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.lettuce.core.RedisCommandTimeoutException;
 import java.time.Duration;
-
 import momento.lettuce.utils.RedisResponse;
 import org.junit.jupiter.api.Test;
 
