@@ -37,10 +37,23 @@ public class MomentoLettuceExceptionMapper {
     return new RedisCommandExecutionException("Unexpected response from Momento: " + response);
   }
 
+  /**
+   * Creates a Lettuce exception in the event a command is not implemented in Momento.
+   *
+   * @param commandName The name of the command.
+   * @return The Lettuce exception.
+   */
   public static UnsupportedOperationException commandNotImplementedException(String commandName) {
     return new UnsupportedOperationException("Command not implemented: " + commandName);
   }
 
+  /**
+   * Creates a Lettuce exception in the event an argument is not supported for a command.
+   *
+   * @param commandName The name of the command.
+   * @param argumentName The name of the argument that is not supported.
+   * @return The Lettuce exception.
+   */
   public static UnsupportedOperationException argumentNotSupportedException(
       String commandName, String argumentName) {
     return new UnsupportedOperationException(
