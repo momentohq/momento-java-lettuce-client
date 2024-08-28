@@ -84,7 +84,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import momento.lettuce.utils.ExpireCondition;
-import momento.lettuce.utils.MomentoLettuceExceptionMapper;
+import momento.lettuce.utils.MomentoToLettuceExceptionMapper;
 import momento.lettuce.utils.RedisCodecByteArrayConverter;
 import momento.lettuce.utils.RedisResponse;
 import momento.sdk.CacheClient;
@@ -1043,7 +1043,7 @@ public class MomentoRedisReactiveClient<K, V>
                   // If any of the delete commands was an error, then return an error.
                   for (var deleteResponse : deletedKeys) {
                     if (deleteResponse instanceof DeleteResponse.Error error) {
-                      return Mono.error(MomentoLettuceExceptionMapper.mapException(error));
+                      return Mono.error(MomentoToLettuceExceptionMapper.mapException(error));
                     }
                   }
                   return Mono.just((long) ks.length);
@@ -1184,12 +1184,15 @@ public class MomentoRedisReactiveClient<K, V>
   public Mono<Boolean> pexpire(K k, Duration duration, ExpireArgs expireArgs) {
     var expireCondition = ExpireCondition.fromExpireArgs(expireArgs);
     if (expireCondition.requiresNoExpiry()) {
-      throw MomentoLettuceExceptionMapper.argumentNotSupportedException("pexpire", "ExpireArgs NX");
+      throw MomentoToLettuceExceptionMapper.createArgumentNotSupportedException(
+          "pexpire", "ExpireArgs NX");
     }
     if (expireCondition.requiresGreaterThan()) {
-      throw MomentoLettuceExceptionMapper.argumentNotSupportedException("pexpire", "ExpireArgs GT");
+      throw MomentoToLettuceExceptionMapper.createArgumentNotSupportedException(
+          "pexpire", "ExpireArgs GT");
     } else if (expireCondition.requiresLessThan()) {
-      throw MomentoLettuceExceptionMapper.argumentNotSupportedException("pexpire", "ExpireArgs LT");
+      throw MomentoToLettuceExceptionMapper.createArgumentNotSupportedException(
+          "pexpire", "ExpireArgs LT");
     }
 
     var encodedKey = codec.encodeKeyToBytes(k);
@@ -1203,10 +1206,11 @@ public class MomentoRedisReactiveClient<K, V>
               } else if (response instanceof UpdateTtlResponse.Miss) {
                 return Mono.just(false);
               } else if (response instanceof UpdateTtlResponse.Error error) {
-                return Mono.error(MomentoLettuceExceptionMapper.mapException(error));
+                return Mono.error(MomentoToLettuceExceptionMapper.mapException(error));
               } else {
                 return Mono.error(
-                    MomentoLettuceExceptionMapper.unexpectedResponseException(response.toString()));
+                    MomentoToLettuceExceptionMapper.createUnexpectedResponseException(
+                        response.toString()));
               }
             });
   }
@@ -3111,10 +3115,10 @@ public class MomentoRedisReactiveClient<K, V>
               } else if (getResponse instanceof GetResponse.Miss) {
                 return Mono.empty();
               } else if (getResponse instanceof GetResponse.Error error) {
-                return Mono.error(MomentoLettuceExceptionMapper.mapException(error));
+                return Mono.error(MomentoToLettuceExceptionMapper.mapException(error));
               } else {
                 return Mono.error(
-                    MomentoLettuceExceptionMapper.unexpectedResponseException(
+                    MomentoToLettuceExceptionMapper.createUnexpectedResponseException(
                         getResponse.toString()));
               }
             });
@@ -3190,10 +3194,10 @@ public class MomentoRedisReactiveClient<K, V>
               if (setResponse instanceof SetResponse.Success) {
                 return Mono.just(RedisResponse.OK);
               } else if (setResponse instanceof SetResponse.Error error) {
-                return Mono.error(MomentoLettuceExceptionMapper.mapException(error));
+                return Mono.error(MomentoToLettuceExceptionMapper.mapException(error));
               } else {
                 return Mono.error(
-                    MomentoLettuceExceptionMapper.unexpectedResponseException(
+                    MomentoToLettuceExceptionMapper.createUnexpectedResponseException(
                         setResponse.toString()));
               }
             });
