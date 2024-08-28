@@ -1022,6 +1022,8 @@ public class MomentoRedisReactiveClient<K, V>
   @Override
   public Mono<Long> unlink(K... ks) {
     // Delete the keys from Momento
+    // TODO: going forward we need to extract the batch operations under an abstraction that
+    // handles rate limiting and concurrency concerns.
     var deleteFutures =
         Arrays.stream(ks)
             .map(k -> client.delete(cacheName, codec.encodeKeyToBytes(k)))
