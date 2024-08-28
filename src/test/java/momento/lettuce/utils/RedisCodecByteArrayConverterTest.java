@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 class RedisCodecByteArrayConverterTest {
 
   @Test
-  void encodeAndDecodeKey() {
+  void encodeAndDecodeKeyToBytes() {
     var converter = new RedisCodecByteArrayConverter(StringCodec.UTF8);
     var key = "key";
     var encodedKey = converter.encodeKeyToBytes(key);
