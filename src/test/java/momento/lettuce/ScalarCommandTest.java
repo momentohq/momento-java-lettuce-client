@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.lettuce.core.RedisCommandTimeoutException;
 import java.time.Duration;
+import momento.lettuce.utils.RedisResponse;
 import org.junit.jupiter.api.Test;
 
 final class ScalarCommandTest extends BaseTestClass {
@@ -33,7 +34,7 @@ final class ScalarCommandTest extends BaseTestClass {
     var key = randomString();
     var value = randomString();
     var setResponse = client.set(key, value).block();
-    assertEquals("OK", setResponse);
+    assertEquals(RedisResponse.OK, setResponse);
 
     var storedValue = client.get(key).block();
     assertEquals(value, storedValue);

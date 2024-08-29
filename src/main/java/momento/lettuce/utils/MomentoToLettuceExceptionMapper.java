@@ -6,7 +6,7 @@ import io.lettuce.core.RedisException;
 import momento.sdk.exceptions.SdkException;
 
 /** Maps Momento SDK exceptions to Lettuce exceptions. */
-public class MomentoLettuceExceptionMapper {
+public class MomentoToLettuceExceptionMapper {
   /**
    * Maps a Momento SDK exception to a Lettuce exception.
    *
@@ -33,7 +33,31 @@ public class MomentoLettuceExceptionMapper {
    * @param response The response from Momento.
    * @return The Lettuce exception.
    */
-  public static RedisException unexpectedResponseException(String response) {
+  public static RedisException createUnexpectedResponseException(String response) {
     return new RedisCommandExecutionException("Unexpected response from Momento: " + response);
+  }
+
+  /**
+   * Creates a Lettuce exception in the event a command is not implemented in Momento.
+   *
+   * @param commandName The name of the command.
+   * @return The Lettuce exception.
+   */
+  public static UnsupportedOperationException createCommandNotImplementedException(
+      String commandName) {
+    return new UnsupportedOperationException("Command not implemented: " + commandName);
+  }
+
+  /**
+   * Creates a Lettuce exception in the event an argument is not supported for a command.
+   *
+   * @param commandName The name of the command.
+   * @param argumentName The name of the argument that is not supported.
+   * @return The Lettuce exception.
+   */
+  public static UnsupportedOperationException createArgumentNotSupportedException(
+      String commandName, String argumentName) {
+    return new UnsupportedOperationException(
+        "Argument not supported for command " + commandName + ": " + argumentName);
   }
 }

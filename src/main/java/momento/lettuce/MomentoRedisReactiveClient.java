@@ -83,13 +83,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-import momento.lettuce.utils.MomentoLettuceExceptionMapper;
+import momento.lettuce.utils.ExpireCondition;
+import momento.lettuce.utils.MomentoToLettuceExceptionMapper;
 import momento.lettuce.utils.RedisCodecByteArrayConverter;
 import momento.lettuce.utils.RedisResponse;
 import momento.sdk.CacheClient;
 import momento.sdk.responses.cache.DeleteResponse;
 import momento.sdk.responses.cache.GetResponse;
 import momento.sdk.responses.cache.SetResponse;
+import momento.sdk.responses.cache.ttl.UpdateTtlResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -1043,7 +1045,7 @@ public class MomentoRedisReactiveClient<K, V>
                   // If any of the delete commands was an error, then return an error.
                   for (var deleteResponse : deletedKeys) {
                     if (deleteResponse instanceof DeleteResponse.Error error) {
-                      return Mono.error(MomentoLettuceExceptionMapper.mapException(error));
+                      return Mono.error(MomentoToLettuceExceptionMapper.mapException(error));
                     }
                   }
                   return Mono.just((long) ks.length);
@@ -1167,22 +1169,52 @@ public class MomentoRedisReactiveClient<K, V>
 
   @Override
   public Mono<Boolean> pexpire(K k, long l) {
-    return null;
+    return pexpire(k, Duration.ofMillis(l), new ExpireArgs());
   }
 
   @Override
   public Mono<Boolean> pexpire(K k, long l, ExpireArgs expireArgs) {
-    return null;
+    return pexpire(k, Duration.ofMillis(l), expireArgs);
   }
 
   @Override
   public Mono<Boolean> pexpire(K k, Duration duration) {
-    return null;
+    return pexpire(k, duration, new ExpireArgs());
   }
 
   @Override
   public Mono<Boolean> pexpire(K k, Duration duration, ExpireArgs expireArgs) {
-    return null;
+    var expireCondition = ExpireCondition.fromExpireArgs(expireArgs);
+    if (expireCondition.requiresNoExpiry()) {
+      throw MomentoToLettuceExceptionMapper.createArgumentNotSupportedException(
+          "pexpire", "ExpireArgs NX");
+    }
+    if (expireCondition.requiresGreaterThan()) {
+      throw MomentoToLettuceExceptionMapper.createArgumentNotSupportedException(
+          "pexpire", "ExpireArgs GT");
+    } else if (expireCondition.requiresLessThan()) {
+      throw MomentoToLettuceExceptionMapper.createArgumentNotSupportedException(
+          "pexpire", "ExpireArgs LT");
+    }
+
+    var encodedKey = codec.encodeKeyToBytes(k);
+
+    var updateTtlResponseFuture = client.updateTtl(cacheName, encodedKey, duration);
+    return Mono.fromFuture(updateTtlResponseFuture)
+        .flatMap(
+            response -> {
+              if (response instanceof UpdateTtlResponse.Set) {
+                return Mono.just(true);
+              } else if (response instanceof UpdateTtlResponse.Miss) {
+                return Mono.just(false);
+              } else if (response instanceof UpdateTtlResponse.Error error) {
+                return Mono.error(MomentoToLettuceExceptionMapper.mapException(error));
+              } else {
+                return Mono.error(
+                    MomentoToLettuceExceptionMapper.createUnexpectedResponseException(
+                        response.toString()));
+              }
+            });
   }
 
   @Override
@@ -3085,10 +3117,10 @@ public class MomentoRedisReactiveClient<K, V>
               } else if (getResponse instanceof GetResponse.Miss) {
                 return Mono.empty();
               } else if (getResponse instanceof GetResponse.Error error) {
-                return Mono.error(MomentoLettuceExceptionMapper.mapException(error));
+                return Mono.error(MomentoToLettuceExceptionMapper.mapException(error));
               } else {
                 return Mono.error(
-                    MomentoLettuceExceptionMapper.unexpectedResponseException(
+                    MomentoToLettuceExceptionMapper.createUnexpectedResponseException(
                         getResponse.toString()));
               }
             });
@@ -3164,10 +3196,10 @@ public class MomentoRedisReactiveClient<K, V>
               if (setResponse instanceof SetResponse.Success) {
                 return Mono.just(RedisResponse.OK);
               } else if (setResponse instanceof SetResponse.Error error) {
-                return Mono.error(MomentoLettuceExceptionMapper.mapException(error));
+                return Mono.error(MomentoToLettuceExceptionMapper.mapException(error));
               } else {
                 return Mono.error(
-                    MomentoLettuceExceptionMapper.unexpectedResponseException(
+                    MomentoToLettuceExceptionMapper.createUnexpectedResponseException(
                         setResponse.toString()));
               }
             });
