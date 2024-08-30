@@ -1505,8 +1505,6 @@ public class MomentoRedisReactiveClient<K, V>
     // before concatenating.
     Collections.reverse(encodedValues);
 
-    // TODO: verify the toString is the right thing to do here since the key must be a string for
-    // collections
     var responseFuture =
         client.listConcatenateBackByteArray(cacheName, codec.encodeKeyToString(k), encodedValues);
     return Mono.fromFuture(responseFuture)
