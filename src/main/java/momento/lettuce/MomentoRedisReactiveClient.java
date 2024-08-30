@@ -76,7 +76,9 @@ import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.ImmediateEventExecutor;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +93,7 @@ import momento.sdk.CacheClient;
 import momento.sdk.responses.cache.DeleteResponse;
 import momento.sdk.responses.cache.GetResponse;
 import momento.sdk.responses.cache.SetResponse;
+import momento.sdk.responses.cache.list.ListConcatenateBackResponse;
 import momento.sdk.responses.cache.ttl.UpdateTtlResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -1493,7 +1496,27 @@ public class MomentoRedisReactiveClient<K, V>
 
   @Override
   public Mono<Long> lpush(K k, V... vs) {
-    return null;
+    var encodedValues = Arrays.stream(vs).map(codec::encodeValueToBytes).collect(Collectors.toList());
+
+    // Because Redis implements lpush as a reduction over left push, we need to reverse the order of the values
+    // before concatenating.
+    Collections.reverse(encodedValues);
+
+    // TODO: verify the toString is the right thing to do here since the key must be a string for collections
+    var responseFuture = client.listConcatenateBackByteArray(cacheName, codec.encodeKeyToString(k), encodedValues);
+    return Mono.fromFuture(responseFuture)
+        .flatMap(
+            response -> {
+              if (response instanceof ListConcatenateBackResponse.Success success) {
+                return Mono.just((long) success.getListLength());
+              } else if (response instanceof ListConcatenateBackResponse.Error error) {
+                return Mono.error(MomentoToLettuceExceptionMapper.mapException(error));
+              } else {
+                return Mono.error(
+                    MomentoToLettuceExceptionMapper.createUnexpectedResponseException(
+                        response.toString()));
+              }
+            });
   }
 
   @Override

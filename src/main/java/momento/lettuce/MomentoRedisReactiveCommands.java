@@ -15,6 +15,8 @@ import reactor.core.publisher.Mono;
 public interface MomentoRedisReactiveCommands<K, V> {
   Mono<V> get(K k);
 
+  Mono<Long> lpush(K k, V... vs);
+
   Mono<String> set(K k, V v);
 
   Mono<Boolean> pexpire(K k, long l);
