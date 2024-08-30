@@ -3,6 +3,7 @@ package momento.lettuce;
 import io.lettuce.core.ExpireArgs;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import java.time.Duration;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -16,6 +17,8 @@ public interface MomentoRedisReactiveCommands<K, V> {
   Mono<V> get(K k);
 
   Mono<Long> lpush(K k, V... vs);
+
+  Flux<V> lrange(K k, long l, long l1);
 
   Mono<String> set(K k, V v);
 

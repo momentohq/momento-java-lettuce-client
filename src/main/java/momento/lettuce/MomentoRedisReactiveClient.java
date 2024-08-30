@@ -76,7 +76,6 @@ import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.ImmediateEventExecutor;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -89,11 +88,13 @@ import momento.lettuce.utils.ExpireCondition;
 import momento.lettuce.utils.MomentoToLettuceExceptionMapper;
 import momento.lettuce.utils.RedisCodecByteArrayConverter;
 import momento.lettuce.utils.RedisResponse;
+import momento.lettuce.utils.ValidatorUtils;
 import momento.sdk.CacheClient;
 import momento.sdk.responses.cache.DeleteResponse;
 import momento.sdk.responses.cache.GetResponse;
 import momento.sdk.responses.cache.SetResponse;
 import momento.sdk.responses.cache.list.ListConcatenateBackResponse;
+import momento.sdk.responses.cache.list.ListFetchResponse;
 import momento.sdk.responses.cache.ttl.UpdateTtlResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -1496,14 +1497,18 @@ public class MomentoRedisReactiveClient<K, V>
 
   @Override
   public Mono<Long> lpush(K k, V... vs) {
-    var encodedValues = Arrays.stream(vs).map(codec::encodeValueToBytes).collect(Collectors.toList());
+    var encodedValues =
+        Arrays.stream(vs).map(codec::encodeValueToBytes).collect(Collectors.toList());
 
-    // Because Redis implements lpush as a reduction over left push, we need to reverse the order of the values
+    // Because Redis implements lpush as a reduction over left push, we need to reverse the order of
+    // the values
     // before concatenating.
     Collections.reverse(encodedValues);
 
-    // TODO: verify the toString is the right thing to do here since the key must be a string for collections
-    var responseFuture = client.listConcatenateBackByteArray(cacheName, codec.encodeKeyToString(k), encodedValues);
+    // TODO: verify the toString is the right thing to do here since the key must be a string for
+    // collections
+    var responseFuture =
+        client.listConcatenateBackByteArray(cacheName, codec.encodeKeyToString(k), encodedValues);
     return Mono.fromFuture(responseFuture)
         .flatMap(
             response -> {
@@ -1526,7 +1531,42 @@ public class MomentoRedisReactiveClient<K, V>
 
   @Override
   public Flux<V> lrange(K k, long l, long l1) {
-    return null;
+    ValidatorUtils.ensureInIntegerRange(l, "l");
+    ValidatorUtils.ensureInIntegerRange(l1, "l1");
+    Integer start = (int) l;
+    Integer end = (int) l1;
+
+    // Since the Redis end offset is inclusive, we need to increment it by 1.
+    // That is, unless it refers to "end of list" (-1), in which case we pass null to Momento.
+    if (end == -1) {
+      end = null;
+    } else {
+      end++;
+    }
+
+    var responseFuture = client.listFetch(cacheName, codec.encodeKeyToString(k), start, end);
+    Mono<List<V>> mono =
+        Mono.fromFuture(responseFuture)
+            .flatMap(
+                response -> {
+                  if (response instanceof ListFetchResponse.Hit hit) {
+                    List<V> result =
+                        hit.valueListByteArray().stream()
+                            .map(codec::decodeValueFromBytes)
+                            .collect(Collectors.toList());
+                    return Mono.just(result);
+
+                  } else if (response instanceof ListFetchResponse.Miss) {
+                    return Mono.just(Collections.emptyList());
+                  } else if (response instanceof ListFetchResponse.Error error) {
+                    return Mono.error(MomentoToLettuceExceptionMapper.mapException(error));
+                  } else {
+                    return Mono.error(
+                        MomentoToLettuceExceptionMapper.createUnexpectedResponseException(
+                            response.toString()));
+                  }
+                });
+    return mono.flatMapMany(Flux::fromIterable);
   }
 
   @Override

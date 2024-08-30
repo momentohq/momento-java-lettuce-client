@@ -3,6 +3,7 @@ package momento.lettuce.utils;
 import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.RedisCommandTimeoutException;
 import io.lettuce.core.RedisException;
+import momento.sdk.exceptions.InvalidArgumentException;
 import momento.sdk.exceptions.SdkException;
 
 /** Maps Momento SDK exceptions to Lettuce exceptions. */
@@ -59,5 +60,25 @@ public class MomentoToLettuceExceptionMapper {
       String commandName, String argumentName) {
     return new UnsupportedOperationException(
         "Argument not supported for command " + commandName + ": " + argumentName);
+  }
+
+  /**
+   * Creates a Lettuce exception in the event an argument is out of range.
+   *
+   * @param argumentName The name of the parameter.
+   * @param value The value that was out of range.
+   * @return The Lettuce exception.
+   */
+  public static InvalidArgumentException createIntegerOutOfRangeException(
+      String argumentName, long value) {
+    return new InvalidArgumentException(
+        "Argument out of range: "
+            + argumentName
+            + " must be between "
+            + Integer.MIN_VALUE
+            + " and "
+            + Integer.MAX_VALUE
+            + ", but was "
+            + value);
   }
 }

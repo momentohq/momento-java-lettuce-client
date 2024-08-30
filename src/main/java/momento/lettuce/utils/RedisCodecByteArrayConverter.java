@@ -35,7 +35,9 @@ public class RedisCodecByteArrayConverter<K, V> {
   /**
    * Encodes the given key to a string using the configured {@code RedisCodec}.
    *
-   * Since Momento collections expect a String-valued key, we have to convert the key to a String.
+   * <p>Since Momento collections expect a String-valued key, we have to convert the key to a
+   * String.
+   *
    * @param key the key to encode
    * @return a string representing the encoded key
    */
