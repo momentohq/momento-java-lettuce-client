@@ -76,4 +76,32 @@ final class ListTest extends BaseTestClass {
         InvalidArgumentException.class,
         () -> client.lrange(key, 1, moreThanIntegerMax).collectList().block());
   }
+
+  @Test
+  public void pExpireWorksOnListValues() {
+    // Add a list to the cache
+    var key = randomString();
+    var values = generateListOfRandomStrings(3);
+    var lPushResponse = client.lpush(key, values.toArray(new String[0])).block();
+    assertEquals(3, lPushResponse);
+
+    // Verify it's there with lrange
+    var lRangeResponse = client.lrange(key, 0, -1).collectList().block();
+    assertEquals(3, lRangeResponse.size());
+
+    // Set the expiry so low it will expire before we can check it
+    var pExpireResponse = client.pexpire(key, 1).block();
+    assertEquals(true, pExpireResponse);
+
+    // Wait for the key to expire
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    // Verify it's gone
+    lRangeResponse = client.lrange(key, 0, -1).collectList().block();
+    assertEquals(0, lRangeResponse.size());
+  }
 }
