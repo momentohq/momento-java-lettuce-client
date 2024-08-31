@@ -8,28 +8,20 @@ import org.junit.jupiter.api.Test;
 class RedisCodecByteArrayConverterTest {
 
   @Test
-  void encodeAndDecodeKeyToBytes() {
-    var converter = new RedisCodecByteArrayConverter(StringCodec.UTF8);
+  void encodeAndDecodeKeyToBase64String() {
+    var converter = new RedisCodecBase64Converter(StringCodec.UTF8);
     var key = "key";
-    var encodedKey = converter.encodeKeyToBytes(key);
-    var decodedKey = converter.decodeKeyFromBytes(encodedKey);
+    var encodedKey = converter.encodeKeyToBase64String(key);
+    var decodedKey = converter.decodeKeyFromBase64String(encodedKey);
     assertEquals(key, decodedKey);
   }
 
   @Test
-  void encodeAndDecodeValueToBytes() {
-    var converter = new RedisCodecByteArrayConverter(StringCodec.UTF8);
+  void encodeAndDecodeValueToBase64String() {
+    var converter = new RedisCodecBase64Converter(StringCodec.UTF8);
     var value = "Hello, world!";
-    var encodedValue = converter.encodeValueToBytes(value);
-    var decodedValue = converter.decodeValueFromBytes(encodedValue);
+    var encodedValue = converter.encodeValueToBase64String(value);
+    var decodedValue = converter.decodeValueFromBase64String(encodedValue);
     assertEquals(value, decodedValue);
-  }
-
-  @Test
-  void encodeKeyToString() {
-    var converter = new RedisCodecByteArrayConverter(StringCodec.UTF8);
-    var key = "key";
-    var encodedKey = converter.encodeKeyToString(key);
-    assertEquals(key, encodedKey);
   }
 }
