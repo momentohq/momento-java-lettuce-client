@@ -86,7 +86,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import momento.lettuce.utils.ExpireCondition;
 import momento.lettuce.utils.MomentoToLettuceExceptionMapper;
-import momento.lettuce.utils.RedisCodecBase64Converter;
+import momento.lettuce.utils.RedisCodecByteArrayConverter;
 import momento.lettuce.utils.RedisResponse;
 import momento.lettuce.utils.ValidatorUtils;
 import momento.sdk.CacheClient;
@@ -103,13 +103,13 @@ public class MomentoRedisReactiveClient<K, V>
     implements RedisReactiveCommands<K, V>, MomentoRedisReactiveCommands<K, V> {
   private final CacheClient client;
   private final String cacheName;
-  private final RedisCodecBase64Converter<K, V> codec;
+  private final RedisCodecByteArrayConverter<K, V> codec;
   private volatile EventExecutorGroup scheduler;
 
   public MomentoRedisReactiveClient(CacheClient client, String cacheName, RedisCodec<K, V> codec) {
     this.client = client;
     this.cacheName = cacheName;
-    this.codec = new RedisCodecBase64Converter<>(codec);
+    this.codec = new RedisCodecByteArrayConverter<>(codec);
     this.scheduler = ImmediateEventExecutor.INSTANCE;
   }
 
@@ -1032,7 +1032,7 @@ public class MomentoRedisReactiveClient<K, V>
     // handles rate limiting and concurrency concerns.
     var deleteFutures =
         Arrays.stream(ks)
-            .map(k -> client.delete(cacheName, codec.encodeKeyToBase64String(k)))
+            .map(k -> client.delete(cacheName, codec.encodeKeyToBytes(k)))
             .collect(Collectors.toList());
 
     // Wait for all the delete commands to complete
@@ -1201,7 +1201,7 @@ public class MomentoRedisReactiveClient<K, V>
           "pexpire", "ExpireArgs LT");
     }
 
-    var encodedKey = codec.encodeKeyToBase64String(k);
+    var encodedKey = codec.encodeKeyToBytes(k);
 
     var updateTtlResponseFuture = client.updateTtl(cacheName, encodedKey, duration);
     return Mono.fromFuture(updateTtlResponseFuture)
@@ -1498,7 +1498,7 @@ public class MomentoRedisReactiveClient<K, V>
   @Override
   public Mono<Long> lpush(K k, V... vs) {
     var encodedValues =
-        Arrays.stream(vs).map(codec::encodeValueToBase64String).collect(Collectors.toList());
+        Arrays.stream(vs).map(codec::encodeValueToBytes).collect(Collectors.toList());
 
     // Because Redis implements lpush as a reduction over left push, we need to reverse the order of
     // the values
@@ -1506,7 +1506,7 @@ public class MomentoRedisReactiveClient<K, V>
     Collections.reverse(encodedValues);
 
     var responseFuture =
-        client.listConcatenateBack(cacheName, codec.encodeKeyToBase64String(k), encodedValues);
+        client.listConcatenateBackByteArray(cacheName, codec.encodeKeyToString(k), encodedValues);
     return Mono.fromFuture(responseFuture)
         .flatMap(
             response -> {
@@ -1542,15 +1542,15 @@ public class MomentoRedisReactiveClient<K, V>
       end++;
     }
 
-    var responseFuture = client.listFetch(cacheName, codec.encodeKeyToBase64String(k), start, end);
+    var responseFuture = client.listFetch(cacheName, codec.encodeKeyToString(k), start, end);
     Mono<List<V>> mono =
         Mono.fromFuture(responseFuture)
             .flatMap(
                 response -> {
                   if (response instanceof ListFetchResponse.Hit hit) {
                     List<V> result =
-                        hit.valueList().stream()
-                            .map(codec::decodeValueFromBase64String)
+                        hit.valueListByteArray().stream()
+                            .map(codec::decodeValueFromBytes)
                             .collect(Collectors.toList());
                     return Mono.just(result);
 
@@ -3169,12 +3169,12 @@ public class MomentoRedisReactiveClient<K, V>
   @Override
   public Mono<V> get(K k) {
     CompletableFuture<GetResponse> getResponseFuture =
-        client.get(cacheName, codec.encodeKeyToBase64String(k));
+        client.get(cacheName, codec.encodeKeyToBytes(k));
     return Mono.fromFuture(getResponseFuture)
         .flatMap(
             getResponse -> {
               if (getResponse instanceof GetResponse.Hit getResponseHit) {
-                return Mono.just(codec.decodeValueFromBase64String(getResponseHit.valueString()));
+                return Mono.just(codec.decodeValueFromBytes(getResponseHit.valueByteArray()));
               } else if (getResponse instanceof GetResponse.Miss) {
                 return Mono.empty();
               } else if (getResponse instanceof GetResponse.Error error) {
@@ -3250,7 +3250,7 @@ public class MomentoRedisReactiveClient<K, V>
   @Override
   public Mono<String> set(K k, V v) {
     CompletableFuture<SetResponse> setResponseFuture =
-        client.set(cacheName, codec.encodeKeyToBase64String(k), codec.encodeValueToBase64String(v));
+        client.set(cacheName, codec.encodeKeyToBytes(k), codec.encodeValueToBytes(v));
     return Mono.fromFuture(setResponseFuture)
         .flatMap(
             setResponse -> {
