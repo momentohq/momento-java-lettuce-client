@@ -13,7 +13,7 @@ repositories {
 
 dependencies {
     implementation("io.lettuce:lettuce-core:6.4.0.RELEASE")
-    implementation("software.momento.java:sdk:1.14.1")
+    implementation("software.momento.java:sdk:1.15.0")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
