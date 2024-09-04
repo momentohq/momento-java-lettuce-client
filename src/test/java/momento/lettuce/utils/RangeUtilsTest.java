@@ -1,9 +1,8 @@
 package momento.lettuce.utils;
 
-import io.lettuce.core.ExpireArgs;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 public class RangeUtilsTest {
   @Test
