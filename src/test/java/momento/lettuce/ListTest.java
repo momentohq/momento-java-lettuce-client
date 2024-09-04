@@ -135,6 +135,7 @@ final class ListTest extends BaseTestClass {
     var key = randomString();
     var values = generateListOfRandomStrings(10);
 
+    // Positive offsets
     var lPushResponse = client.lpush(key, values.toArray(new String[0])).block();
     assertEquals(10, lPushResponse);
 
@@ -144,6 +145,18 @@ final class ListTest extends BaseTestClass {
 
     // Verify the list is empty
     var lRangeResponse = client.lrange(key, 0, -1).collectList().block();
+    assertEquals(0, lRangeResponse.size());
+
+    // Negative offsets
+    lPushResponse = client.lpush(key, values.toArray(new String[0])).block();
+    assertEquals(10, lPushResponse);
+
+    // Trim on an empty range deletes the list
+    lTrimResponse = client.ltrim(key, -4, -5).block();
+    assertEquals("OK", lTrimResponse);
+
+    // Verify the list is empty
+    lRangeResponse = client.lrange(key, 0, -1).collectList().block();
     assertEquals(0, lRangeResponse.size());
   }
 

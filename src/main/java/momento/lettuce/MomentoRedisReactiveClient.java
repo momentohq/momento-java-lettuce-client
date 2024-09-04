@@ -1582,7 +1582,7 @@ public class MomentoRedisReactiveClient<K, V>
     ValidatorUtils.ensureInIntegerRange(l1, "l1");
 
     // When the range is empty, Redis dictates that the list should be deleted.
-    if (l >= 0 && l1 >= 0 && l > l1 || l < 0 && l1 < 0 && l < l1) {
+    if (((l >= 0 && l1 >= 0) || (l < 0 && l1 < 0)) && l > l1) {
       return unlink(k).then(Mono.just(RedisResponse.OK));
     }
 
