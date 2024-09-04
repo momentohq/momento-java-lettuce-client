@@ -12,6 +12,11 @@ import momento.sdk.exceptions.InvalidArgumentException;
 import org.junit.jupiter.api.Test;
 
 final class ListTest extends BaseTestClass {
+  private static List<String> reverseList(List<String> list) {
+    List<String> reversedList = new ArrayList<>(list);
+    Collections.reverse(reversedList);
+    return reversedList;
+  }
 
   @Test
   public void testLPushHappyPath() {
@@ -25,10 +30,7 @@ final class ListTest extends BaseTestClass {
   public void testLRangeHappyPath() {
     var key = randomString();
     var values = generateListOfRandomStrings(5);
-
-    // Reverse the list using Collections.reverse()
-    List<String> valuesReversed = new ArrayList<>(values);
-    Collections.reverse(valuesReversed);
+    var valuesReversed = reverseList(values);
 
     var lPushResponse = client.lpush(key, values.toArray(new String[0])).block();
     assertEquals(5, lPushResponse);
@@ -75,6 +77,29 @@ final class ListTest extends BaseTestClass {
     assertThrows(
         InvalidArgumentException.class,
         () -> client.lrange(key, 1, moreThanIntegerMax).collectList().block());
+  }
+
+  @Test
+  public void testLPushMultipleTimes() {
+    var key = randomString();
+    var values = generateListOfRandomStrings(3);
+    var valuesReversed = reverseList(values);
+    var lPushResponse = client.lpush(key, values.toArray(new String[0])).block();
+    assertEquals(3, lPushResponse);
+
+    // Push a new list of values
+    var newValues = generateListOfRandomStrings(3);
+    var newValuesReversed = reverseList(newValues);
+    lPushResponse = client.lpush(key, newValues.toArray(new String[0])).block();
+    assertEquals(6, lPushResponse);
+
+    // Verify the list is the concatenation of the two lists in reverse order
+    var lRangeResponse = client.lrange(key, 0, -1).collectList().block();
+    assertEquals(6, lRangeResponse.size());
+    // should be newValuesReversed + valuesReversed; make a new list with this order
+    var expectedValues = new ArrayList<>(newValuesReversed);
+    expectedValues.addAll(valuesReversed);
+    assertEquals(expectedValues, lRangeResponse);
   }
 
   @Test

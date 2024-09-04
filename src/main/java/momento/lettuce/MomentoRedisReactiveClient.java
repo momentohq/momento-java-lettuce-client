@@ -93,7 +93,7 @@ import momento.sdk.CacheClient;
 import momento.sdk.responses.cache.DeleteResponse;
 import momento.sdk.responses.cache.GetResponse;
 import momento.sdk.responses.cache.SetResponse;
-import momento.sdk.responses.cache.list.ListConcatenateBackResponse;
+import momento.sdk.responses.cache.list.ListConcatenateFrontResponse;
 import momento.sdk.responses.cache.list.ListFetchResponse;
 import momento.sdk.responses.cache.ttl.UpdateTtlResponse;
 import reactor.core.publisher.Flux;
@@ -1506,13 +1506,13 @@ public class MomentoRedisReactiveClient<K, V>
     Collections.reverse(encodedValues);
 
     var responseFuture =
-        client.listConcatenateBackByteArray(cacheName, codec.encodeKeyToString(k), encodedValues);
+        client.listConcatenateFrontByteArray(cacheName, codec.encodeKeyToBytes(k), encodedValues);
     return Mono.fromFuture(responseFuture)
         .flatMap(
             response -> {
-              if (response instanceof ListConcatenateBackResponse.Success success) {
+              if (response instanceof ListConcatenateFrontResponse.Success success) {
                 return Mono.just((long) success.getListLength());
-              } else if (response instanceof ListConcatenateBackResponse.Error error) {
+              } else if (response instanceof ListConcatenateFrontResponse.Error error) {
                 return Mono.error(MomentoToLettuceExceptionMapper.mapException(error));
               } else {
                 return Mono.error(
@@ -1542,7 +1542,7 @@ public class MomentoRedisReactiveClient<K, V>
       end++;
     }
 
-    var responseFuture = client.listFetch(cacheName, codec.encodeKeyToString(k), start, end);
+    var responseFuture = client.listFetch(cacheName, codec.encodeKeyToBytes(k), start, end);
     Mono<List<V>> mono =
         Mono.fromFuture(responseFuture)
             .flatMap(

@@ -24,12 +24,4 @@ class RedisCodecByteArrayConverterTest {
     var decodedValue = converter.decodeValueFromBytes(encodedValue);
     assertEquals(value, decodedValue);
   }
-
-  @Test
-  void encodeKeyToString() {
-    var converter = new RedisCodecByteArrayConverter(StringCodec.UTF8);
-    var key = "key";
-    var encodedKey = converter.encodeKeyToString(key);
-    assertEquals(key, encodedKey);
-  }
 }
