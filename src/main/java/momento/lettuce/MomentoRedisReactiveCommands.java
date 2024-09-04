@@ -20,6 +20,8 @@ public interface MomentoRedisReactiveCommands<K, V> {
 
   Flux<V> lrange(K k, long l, long l1);
 
+  Mono<String> ltrim(K k, long l, long l1);
+
   Mono<String> set(K k, V v);
 
   Mono<Boolean> pexpire(K k, long l);

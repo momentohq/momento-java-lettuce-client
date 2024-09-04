@@ -86,6 +86,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import momento.lettuce.utils.ExpireCondition;
 import momento.lettuce.utils.MomentoToLettuceExceptionMapper;
+import momento.lettuce.utils.RangeUtils;
 import momento.lettuce.utils.RedisCodecByteArrayConverter;
 import momento.lettuce.utils.RedisResponse;
 import momento.lettuce.utils.ValidatorUtils;
@@ -95,6 +96,7 @@ import momento.sdk.responses.cache.GetResponse;
 import momento.sdk.responses.cache.SetResponse;
 import momento.sdk.responses.cache.list.ListConcatenateFrontResponse;
 import momento.sdk.responses.cache.list.ListFetchResponse;
+import momento.sdk.responses.cache.list.ListRetainResponse;
 import momento.sdk.responses.cache.ttl.UpdateTtlResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -1532,15 +1534,7 @@ public class MomentoRedisReactiveClient<K, V>
     ValidatorUtils.ensureInIntegerRange(l, "l");
     ValidatorUtils.ensureInIntegerRange(l1, "l1");
     Integer start = (int) l;
-    Integer end = (int) l1;
-
-    // Since the Redis end offset is inclusive, we need to increment it by 1.
-    // That is, unless it refers to "end of list" (-1), in which case we pass null to Momento.
-    if (end == -1) {
-      end = null;
-    } else {
-      end++;
-    }
+    Integer end = RangeUtils.adjustEndRangeFromInclusiveToExclusive(l1);
 
     var responseFuture = client.listFetch(cacheName, codec.encodeKeyToBytes(k), start, end);
     Mono<List<V>> mono =
@@ -1584,7 +1578,31 @@ public class MomentoRedisReactiveClient<K, V>
 
   @Override
   public Mono<String> ltrim(K k, long l, long l1) {
-    return null;
+    ValidatorUtils.ensureInIntegerRange(l, "l");
+    ValidatorUtils.ensureInIntegerRange(l1, "l1");
+
+    // When the range is empty, Redis dictates that the list should be deleted.
+    if (l >= 0 && l1 >= 0 && l > l1 || l < 0 && l1 < 0 && l < l1) {
+      return unlink(k).then(Mono.just(RedisResponse.OK));
+    }
+
+    Integer start = (int) l;
+    Integer end = RangeUtils.adjustEndRangeFromInclusiveToExclusive(l1);
+
+    var responseFuture = client.listRetain(cacheName, codec.encodeKeyToBytes(k), start, end);
+    return Mono.fromFuture(responseFuture)
+        .flatMap(
+            response -> {
+              if (response instanceof ListRetainResponse.Success) {
+                return Mono.just(RedisResponse.OK);
+              } else if (response instanceof ListRetainResponse.Error error) {
+                return Mono.error(MomentoToLettuceExceptionMapper.mapException(error));
+              } else {
+                return Mono.error(
+                    MomentoToLettuceExceptionMapper.createUnexpectedResponseException(
+                        response.toString()));
+              }
+            });
   }
 
   @Override
