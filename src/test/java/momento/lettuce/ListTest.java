@@ -129,4 +129,70 @@ final class ListTest extends BaseTestClass {
     lRangeResponse = client.lrange(key, 0, -1).collectList().block();
     assertEquals(0, lRangeResponse.size());
   }
+
+  @Test
+  public void testLTrimShouldDeleteListOnEmptyRange() {
+    var key = randomString();
+    var values = generateListOfRandomStrings(10);
+
+    // Positive offsets
+    var lPushResponse = client.lpush(key, values.toArray(new String[0])).block();
+    assertEquals(10, lPushResponse);
+
+    // Trim on an empty range deletes the list
+    var lTrimResponse = client.ltrim(key, 5, 4).block();
+    assertEquals("OK", lTrimResponse);
+
+    // Verify the list is empty
+    var lRangeResponse = client.lrange(key, 0, -1).collectList().block();
+    assertEquals(0, lRangeResponse.size());
+
+    // Negative offsets
+    lPushResponse = client.lpush(key, values.toArray(new String[0])).block();
+    assertEquals(10, lPushResponse);
+
+    // Trim on an empty range deletes the list
+    lTrimResponse = client.ltrim(key, -4, -5).block();
+    assertEquals("OK", lTrimResponse);
+
+    // Verify the list is empty
+    lRangeResponse = client.lrange(key, 0, -1).collectList().block();
+    assertEquals(0, lRangeResponse.size());
+  }
+
+  @Test
+  public void testLTrimShouldTrimList() {
+    var key = randomString();
+    var values = generateListOfRandomStrings(10);
+    var valuesReversed = reverseList(values);
+
+    var lPushResponse = client.lpush(key, values.toArray(new String[0])).block();
+    assertEquals(10, lPushResponse);
+
+    var lTrimResponse = client.ltrim(key, 2, 4).block();
+    assertEquals("OK", lTrimResponse);
+
+    // Verify the list indices 2 to 4 inclusive
+    var lRangeResponse = client.lrange(key, 0, -1).collectList().block();
+    assertEquals(3, lRangeResponse.size());
+    assertEquals(valuesReversed.subList(2, 5), lRangeResponse);
+  }
+
+  @Test
+  public void testLTrimShouldWorkWithEndOfList() {
+    var key = randomString();
+    var values = generateListOfRandomStrings(10);
+    var valuesReversed = reverseList(values);
+
+    var lPushResponse = client.lpush(key, values.toArray(new String[0])).block();
+    assertEquals(10, lPushResponse);
+
+    var lTrimResponse = client.ltrim(key, 2, -1).block();
+    assertEquals("OK", lTrimResponse);
+
+    // Verify the list indices 2 to the end
+    var lRangeResponse = client.lrange(key, 0, -1).collectList().block();
+    assertEquals(8, lRangeResponse.size());
+    assertEquals(valuesReversed.subList(2, 10), lRangeResponse);
+  }
 }
