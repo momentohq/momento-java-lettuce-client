@@ -3,8 +3,7 @@ plugins {
     id("com.diffplug.spotless") version "5.15.1"
 }
 
-// TODO replace with etsablished group id
-group = "momento.lettuce"
+group = "software.momento.java"
 version = "0.1.0"
 
 repositories {
