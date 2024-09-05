@@ -10,6 +10,11 @@ repositories {
     mavenCentral()
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
 dependencies {
     implementation("io.lettuce:lettuce-core:6.4.0.RELEASE")
     implementation("software.momento.java:sdk:1.15.0")
@@ -35,3 +40,5 @@ spotless {
         googleJavaFormat("1.11.0")
     }
 }
+
+apply(from="publish.gradle.kts")
