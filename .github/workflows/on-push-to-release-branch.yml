@@ -45,13 +45,14 @@ jobs:
     - name: Build project
       run: make build
 
-#    - name: Publish to sonatype
-#      env:
-#        SONATYPE_SIGNING_KEY: ${{ secrets.SONATYPE_SIGNING_KEY }}
-#        SONATYPE_SIGNING_KEY_PASSWORD: ${{ secrets.SONATYPE_SIGNING_KEY_PASSWORD }}
-#        SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-#        SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-#        ORG_GRADLE_PROJECT_version: ${{ needs.release.outputs.version }}
-#      uses: gradle/gradle-build-action@v2
-#      with:
-#        arguments: publishToSonatype closeAndReleaseStagingRepository
+    - name: Publish to sonatype
+      env:
+        SONATYPE_SIGNING_KEY: ${{ secrets.SONATYPE_SIGNING_KEY }}
+        SONATYPE_SIGNING_KEY_PASSWORD: ${{ secrets.SONATYPE_SIGNING_KEY_PASSWORD }}
+        SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+        SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+        ORG_GRADLE_PROJECT_version: ${{ needs.release.outputs.version }}
+      uses: gradle/gradle-build-action@v2
+      with:
+        # Note that this will require manual release from Sonatype
+        arguments: publishToSonatype closeSonatypeStagingRepository
