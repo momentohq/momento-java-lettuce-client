@@ -9,7 +9,7 @@ clean:
 
 ## Build the project
 build:
-	./gradlew build
+	./gradlew assemble
 
 ## Run all the tests
 test: test-momento test-redis
