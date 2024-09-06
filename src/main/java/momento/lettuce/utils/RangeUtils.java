@@ -1,5 +1,6 @@
 package momento.lettuce.utils;
 
+/** Provides utility methods for working with ranges. */
 public class RangeUtils {
   /**
    * Adjusts the end range from inclusive to exclusive.

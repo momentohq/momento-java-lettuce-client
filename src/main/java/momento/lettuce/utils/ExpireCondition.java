@@ -17,6 +17,15 @@ public class ExpireCondition {
   private final boolean requiresLessThan;
   private final boolean requiresGreaterThan;
 
+  /**
+   * Creates a new {@link ExpireCondition}.
+   *
+   * @param requiresExistingExpiry Whether the operation requires an existing expiry.
+   * @param requiresNoExpiry Whether the operation requires no expiry set.
+   * @param requiresLessThan Whether the operation requires the provided expiry to be less than the
+   * @param requiresGreaterThan Whether the operation requires the provided expiry to be greater
+   *     than
+   */
   public ExpireCondition(
       boolean requiresExistingExpiry,
       boolean requiresNoExpiry,
