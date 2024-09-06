@@ -1,2 +1,2 @@
-rootProject.name = "momento-java-lettuce-client"
+rootProject.name = "momento-lettuce"
 
