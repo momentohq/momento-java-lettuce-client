@@ -34,6 +34,6 @@ Additionally, to understand what APIs are supported, you can use the interface `
 
 ## Current Redis API support
 
-This library supports the most popular Redis APIs, but does not yet support all Redis APIs. We currently support the most common APIs related to string values (GET, SET, DELETE), as well as hash values (`HGET`/`HSET`). We will be adding support for additional APIs in the future. If there is a particular API that you need support for, please drop by our [Discord](https://discord.com/invite/3HkAKjUZGq) or e-mail us at [support@momentohq.com](mailto:support@momentohq.com) and let us know!
+This library supports the most popular Redis APIs, but does not yet support all Redis APIs. We currently support the most common APIs related to string values (`get`, `set`, `unlink`), as well as list (`lpush`, `lrange`, `ltrim`). We will be adding support for additional APIs in the future. If there is a particular API that you need support for, please drop by our [Discord](https://discord.com/invite/3HkAKjUZGq) or e-mail us at [support@momentohq.com](mailto:support@momentohq.com) and let us know!
 
 {{ ossFooter }}
