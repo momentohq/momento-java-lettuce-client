@@ -55,7 +55,7 @@ publishing {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
             groupId = group.toString()
-            artifactId = "momento-lettuce"
+            artifactId = project.name
             version = project.version.toString()
 
             pom {
