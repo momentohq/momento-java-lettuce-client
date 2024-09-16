@@ -11,6 +11,10 @@ clean:
 build:
 	./gradlew assemble
 
+## Build the examples
+build-examples:
+	cd ./examples && ./gradlew assemble
+
 ## Run all the tests
 test: test-momento test-redis
 
