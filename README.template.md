@@ -25,11 +25,13 @@ The Momento Lettuce compatibility client is [available on Maven Central](https:/
 To switch your existing `lettuce` application to use Momento Cache, you only need to change the code where you construct your client object. Here is an example of constructing a Momento lettuce client:
 
 ```java
+{% include "./examples/src/main/java/momento/lettuce/example/doc_examples/ReadmeExample.java" %}
 ```
 
 Additionally, to understand what APIs are supported, you can use the interface `MomentoRedisReactiveCommands` which contains only those APIs that are supported by this compatibility client:
 
 ```java
+{% include "./examples/src/main/java/momento/lettuce/example/doc_examples/LimitedApiExample.java" %}
 ```
 
 ## Current Redis API support
