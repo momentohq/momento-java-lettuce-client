@@ -10,6 +10,8 @@ use the same code with either a Redis server or with the Momento Cache service!
 
 ## Installation
 
+To use the compatiblity client, you will need three dependencies in your project: the Momento Lettuce compatibility client, the Momento Cache client, and the lettuce client.
+
 The Momento Lettuce compatibility client is [available on Maven Central](https://search.maven.org/artifact/software.momento.java/momento-lettuce). You can add it to your project via:
 
 ```xml
@@ -19,6 +21,18 @@ The Momento Lettuce compatibility client is [available on Maven Central](https:/
   <version>0.1.0</version>
 </dependency>
 ```
+
+You will also need to add the Momento Cache client library to your project. You can find the latest version of the Momento Cache client library [on Maven Central](https://central.sonatype.com/artifact/software.momento.java/sdk) as well:
+
+```xml
+<dependency>
+    <groupId>software.momento.java</groupId>
+    <artifactId>sdk</artifactId>
+    <version>1.15.0</version>
+</dependency>
+```
+
+As well as the lettuce client also [on Maven Central](https://central.sonatype.com/artifact/io.lettuce/lettuce-core).
 
 ## Usage
 
