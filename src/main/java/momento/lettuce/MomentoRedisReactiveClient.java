@@ -112,7 +112,6 @@ public class MomentoRedisReactiveClient<K, V>
   private final CacheClient client;
   private final String cacheName;
   private final RedisCodecByteArrayConverter<K, V> codec;
-  private volatile EventExecutorGroup scheduler;
 
   /**
    * Creates a new {@link MomentoRedisReactiveClient}.
@@ -125,7 +124,6 @@ public class MomentoRedisReactiveClient<K, V>
     this.client = client;
     this.cacheName = cacheName;
     this.codec = new RedisCodecByteArrayConverter<>(codec);
-    this.scheduler = ImmediateEventExecutor.INSTANCE;
   }
 
   /**
