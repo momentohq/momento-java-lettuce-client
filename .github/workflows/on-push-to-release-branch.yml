@@ -30,6 +30,7 @@ jobs:
         run: echo "release=${{ steps.semrel.outputs.version }}" >> $GITHUB_OUTPUT
 
   publish:
+    needs: [ release ]
     runs-on: ubuntu-latest
 
     steps:
