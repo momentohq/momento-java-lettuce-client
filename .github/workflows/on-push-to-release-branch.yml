@@ -54,4 +54,4 @@ jobs:
         ORG_GRADLE_PROJECT_version: ${{ needs.release.outputs.version }}
       uses: gradle/gradle-build-action@v2
       with:
-        arguments: publishToSonatype closeAndReleaseSonatypeStagingRepository
+        arguments: publishToSonatype closeSonatypeStagingRepository
