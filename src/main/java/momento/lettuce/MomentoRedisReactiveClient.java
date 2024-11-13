@@ -104,6 +104,8 @@ import reactor.core.publisher.Mono;
 /**
  * A Redis client that wraps a {@link CacheClient} and provides reactive commands.
  *
+ * Supported commands are proxied to the {@link CacheClient} and the cache name provided at construction.
+ *
  * @param <K> Key type.
  * @param <V> Value type.
  */
